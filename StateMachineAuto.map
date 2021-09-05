@@ -1,0 +1,64 @@
+MPLINK 4.40, Linker
+Linker Map File - Created Thu May 03 18:17:16 2018
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000002
+                   .org_2       code   0x000004    program   0x000194
+.config_2007_STATEMACHINEAUTO.O       code   0x002007    program   0x000002
+                   .org_3       code   0x002100    program   0x000008
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000000      
+                            0x000004    0x0000cd      
+                            0x002007    0x002007      
+                            0x002100    0x002103      
+            208 out of 4359 program addresses used, program memory utilization is 4%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+          Main_Loop_Start   0x00003f    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                  SM_Exit   0x0000cd    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State1   0x000070    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+               SM_State10   0x0000c3    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State2   0x00007a    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State3   0x000083    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State4   0x00008c    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State5   0x000095    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State6   0x00009e    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State7   0x0000a7    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State8   0x0000b0    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State9   0x0000b9    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+              SM_Steering   0x000045    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                     main   0x000018    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     main   0x000018    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+          Main_Loop_Start   0x00003f    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+              SM_Steering   0x000045    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State1   0x000070    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State2   0x00007a    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State3   0x000083    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State4   0x00008c    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State5   0x000095    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State6   0x00009e    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State7   0x0000a7    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State8   0x0000b0    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                SM_State9   0x0000b9    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+               SM_State10   0x0000c3    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+                  SM_Exit   0x0000cd    program     static E:\HW\FinishedAssignments\Assignment 11\Lab11\StateMachineAuto.asm
+
+

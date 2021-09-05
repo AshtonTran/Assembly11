@@ -1,0 +1,1007 @@
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;**********************************************************************
+                      00002 ;   This file is a basic code template for assembly code generation   *
+                      00003 ;   on the PIC16F690. This file contains the basic code               *
+                      00004 ;   building blocks to build upon.                                    *  
+                      00005 ;                                                                     *
+                      00006 ;   Refer to the MPASM User's Guide for additional information on     *
+                      00007 ;   features of the assembler (Document DS33014).                     *
+                      00008 ;                                                                     *
+                      00009 ;   Refer to the respective PIC data sheet for additional             *
+                      00010 ;   information on the instruction set.                               *
+                      00011 ;                                                                     *
+                      00012 ;**********************************************************************
+                      00013 ;                                                                     *
+                      00014 ;    Filename:     Ashton Tran                                        *
+                      00015 ;    Date:                                                            *
+                      00016 ;    File Version:                                                    *
+                      00017 ;                                                                     *
+                      00018 ;    Author:                                                          *
+                      00019 ;    Company:                                                         *
+                      00020 ;                                                                     * 
+                      00021 ;                                                                     *
+                      00022 ;**********************************************************************
+                      00023 ;                                                                     *
+                      00024 ;    Files Required: P16F690.INC                                      *
+                      00025 ;                                                                     *
+                      00026 ;**********************************************************************
+                      00027 ;                                                                     *
+                      00028 ;    Notes:                                                           *
+                      00029 ;                                                                     *
+                      00030 ;**********************************************************************
+                      00031 
+                      00032 
+                      00033         list            p=16f690                ; list directive to define processor
+                      00034         #include        <P16F690.inc>           ; processor specific variable definitions
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F690 processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2011 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+                      00739         LIST
+                      00035         
+2007   30E4           00036         __CONFIG    _CP_OFF & _CPD_OFF & _BOR_OFF & _PWRTE_ON & _WDT_OFF & _INTRC_OSC_NOCLKOUT & _MCLRE_
+                            ON & _FCMEN_OFF & _IESO_OFF
+                      00037 
+                      00038 
+                      00039 ; '__CONFIG' directive is used to embed configuration data within .asm file.
+                      00040 ; The labels following the directive are located in the respective .inc file.
+                      00041 ; See respective data sheet for additional information on configuration word.
+                      00042 
+                      00043 ;***** VARIABLE DEFINITIONS
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00044 
+                      00045 
+  0000007D            00046 w_temp           EQU    0x7D                    ; variable used for context saving
+  0000007E            00047 status_temp      EQU    0x7E                    ; variable used for context saving
+  0000007F            00048 pclath_temp      EQU    0x7F                    ; variable used for context saving
+                      00049 
+                      00050 
+  00000023            00051 setinal      EQU    0X23 
+  00000024            00052 portc        EQU    0x24            ; Shadow portc
+  00000025            00053 State        EQU    0x25
+  00000026            00054 portb            EQU    0x26                    ; Shadow portb  
+  00000027            00055 COUNT        EQU    0x27
+                      00056 
+                      00057 ;**********************************************************************
+0000                  00058         ORG             0x000                   ; processor reset vector
+0000   2818           00059         goto            main                    ; go to beginning of program
+                      00060 
+                      00061 
+0004                  00062         ORG             0x004                   ; interrupt vector location
+0004   00FD           00063         movwf           w_temp                  ; save off current W register contents
+0005   0803           00064         movf            STATUS,w                ; move status register into W register
+0006   00FE           00065         movwf           status_temp             ; save off contents of STATUS register
+0007   080A           00066         movf            PCLATH,w                ; move pclath register into W register
+0008   00FF           00067         movwf           pclath_temp             ; save off contents of PCLATH register
+                      00068 
+                      00069 
+                      00070 ; isr code can go here or be located as a call subroutine elsewhere
+Warning[203]: Found opcode in column 1. (nop)
+0009   0000           00071 nop
+                      00072 
+000A   1423           00073         BSF                     setinal,0
+000B   100C           00074         BCF                     PIR1,TMR1IF
+000C   3083           00075         MOVLW           0x83    ;0x3C           131
+000D   008F           00076         MOVWF           TMR1H
+000E   30AF           00077         MOVLW           0xAF                            ;175
+000F   008E           00078         MOVWF           TMR1L
+                      00079                 
+Message[305]: Using default destination of 1 (file).
+0010   0AA7           00080         INCF        COUNT               
+                      00081         
+                      00082 
+0011   087F           00083         movf            pclath_temp,w           ; retrieve copy of PCLATH register
+0012   008A           00084         movwf           PCLATH                  ; restore pre-isr PCLATH register contents      
+0013   087E           00085         movf            status_temp,w           ; retrieve copy of STATUS register
+0014   0083           00086         movwf           STATUS                      ; restore pre-isr STATUS register contents
+0015   0EFD           00087         swapf           w_temp,f
+0016   0E7D           00088         swapf           w_temp,w                ; restore pre-isr W register contents
+0017   0009           00089         retfie                                          ; return from interrupt
+                      00090 
+0018                  00091 main
+                      00092 
+0018   1283 1303      00093         BANKSEL   INTCON
+001A   30C0           00094         MOVLW     0xC0            ; Place 10100000 into INTCON  - Set the Timer0 Overflow Interupt and e
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            nables GIE
+001B   008B           00095         MOVWF     INTCON        
+001C   1283 1303      00096         BANKSEL   T1CON
+001E   3031           00097         MOVLW     0x31                  ;0x11 0x31 0x25 Look up TIM1 comfiguration 0x11 = 0001 0001 (bit
+                             zero enables TMR1, bit 4 and 5 Prescaler Preload)
+001F   0090           00098         MOVWF     T1CON
+0020   1283 1303      00099         BANKSEL   PIR1  
+0022   018C           00100         CLRF      PIR1
+0023   1683 1303      00101         BANKSEL   PIE1
+0025   3001           00102         MOVLW     0x01
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0026   008C           00103         MOVWF     PIE1
+0027   1283 1303      00104         BANKSEL         PIR1
+0029   100C           00105         BCF             PIR1,TMR1IF
+002A   303C           00106         MOVLW       0x3C                ; Testing Values For Closer Time Original 0x0B 00 
+002B   008F           00107         MOVWF       TMR1H                   ; TMR1 High Byte
+002C   30AF           00108         MOVLW       0xAF               ; Testing Values For Closer Time Original 0xBD BF
+002D   008E           00109         MOVWF       TMR1L 
+                      00110 
+                      00111 
+002E   1283 1703      00112         BANKSEL ANSEL            ; Select the analog select register
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0030   019E           00113         CLRF    ANSEL        ; Clear register
+0031   1283 1703      00114         BANKSEL ANSELH
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0033   019F           00115         CLRF    ANSELH       ; Clear register
+0034   1683 1303      00116         BANKSEL TRISB   
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0036   0186           00117         CLRF    TRISB
+0037   1683 1303      00118         BANKSEL TRISC        ;Selects the correct bank for register
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0039   0187           00119         CLRF    TRISC        ;Make Port C an output only
+003A   1283 1303      00120         BANKSEL PORTC        ; Gets to Port C bank
+003C   0187           00121     CLRF    PORTC        ; Clear
+003D   3001           00122         MOVLW   D'1'         ; Placing Value in State
+003E   00A5           00123     MOVWF   State
+                      00124 
+                      00125 
+                      00126 
+                      00127 
+003F                  00128 Main_Loop_Start
+                      00129 
+Warning[203]: Found opcode in column 1. (BTFSS)
+003F   1C23           00130 BTFSS setinal,0
+                      00131 
+Warning[203]: Found opcode in column 1. (goto)
+0040   283F           00132 goto  Main_Loop_Start
+Warning[203]: Found opcode in column 1. (BCF)
+0041   1023           00133 BCF   setinal,0 
+                      00134 
+Warning[203]: Found opcode in column 1. (BTFSS)
+0042   1D27           00135 BTFSS COUNT,2
+Warning[203]: Found opcode in column 1. (goto)
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0043   283F           00136 goto  Main_Loop_Start   
+                      00137                                         ;               State Machine increment from 0 to 8
+                      00138 
+                      00139                                                         ;               State Machine Steering
+Warning[203]: Found opcode in column 1. (CLRF)
+0044   01A7           00140 CLRF  COUNT
+                      00141 
+0045                  00142 SM_Steering
+                      00143                 
+                      00144                            
+0045   0825           00145             movf        State,w
+0046   3A01           00146                 xorlw   D'1'
+0047   1903           00147                 btfsc   STATUS,Z
+0048   2870           00148                 goto    SM_State1
+0049   1283 1303      00149                 BANKSEL State
+004B   0825           00150                 movf    State,w
+004C   3A02           00151                 xorlw   D'2'
+004D   1903           00152                 btfsc   STATUS,Z
+004E   287A           00153                 goto    SM_State2
+004F   0825           00154                 movf    State,w
+0050   3A03           00155                 xorlw   D'3'
+0051   1903           00156                 btfsc   STATUS,Z
+0052   2883           00157                 goto    SM_State3
+0053   0825           00158                 movf    State,w
+0054   3A04           00159                 xorlw   D'4'
+0055   1903           00160                 btfsc   STATUS,Z
+0056   288C           00161                 goto    SM_State4
+0057   0825           00162                 movf    State,w
+0058   3A05           00163                 xorlw   D'5'
+0059   1903           00164                 btfsc   STATUS,Z
+005A   2895           00165                 goto    SM_State5
+005B   0825           00166                 movf    State,w
+005C   3A06           00167                 xorlw   D'6'
+005D   1903           00168                 btfsc   STATUS,Z
+005E   289E           00169                 goto    SM_State6
+005F   0825           00170                 movf    State,w
+0060   3A07           00171                 xorlw   D'7'
+0061   1903           00172                 btfsc   STATUS,Z
+0062   28A7           00173                 goto    SM_State7
+0063   0825           00174                 movf    State,w
+0064   3A08           00175                 xorlw   D'8'
+0065   1903           00176                 btfsc   STATUS,Z
+0066   28B0           00177                 goto    SM_State8
+0067   0825           00178                 movf    State,w
+0068   3A09           00179                 xorlw   D'9'
+0069   1903           00180                 btfsc   STATUS,Z
+006A   28B9           00181                 goto    SM_State9
+006B   0825           00182                 movf    State,w
+006C   3A0A           00183                 xorlw   D'10'
+006D   1903           00184                 btfsc   STATUS,Z
+006E   28C3           00185                 goto    SM_State10
+                      00186                                 
+                      00187 
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+006F   2845           00188         goto SM_Steering
+                      00189 ;*************************************************************************
+                      00190 ;               End of State Machine Steering
+                      00191 ;*************************************************************************
+                      00192 
+                      00193 
+                      00194 
+                      00195 ;*************************************************************************
+                      00196 ;               State Machine State 0 
+                      00197 ;       output (0x80 to port c) to the ligth bar
+                      00198 ;*************************************************************************
+                      00199 
+0070                  00200 SM_State1  
+0070   0186           00201         CLRF    PORTB
+0071   1283 1303      00202         BANKSEL PORTC
+0073   3080           00203         movlw   0x80
+0074   00A4           00204     movwf   portc
+0075   0824           00205         movf    portc,W
+0076   0087           00206         movwf   PORTC
+0077   3002           00207         movlw   D'2'
+0078   00A5           00208         movwf   State   
+                      00209 ;       goto    SM_State1                       ;Go to next State       
+0079   28CD           00210         goto SM_Exit
+                      00211 ;*************************************************************************
+                      00212 ;               State Machine State 1
+                      00213 ;       output (0x40 to portc ) to the ligth bar
+                      00214 ;*************************************************************************
+007A                  00215 SM_State2
+007A   1283 1303      00216         BANKSEL PORTC
+007C   3040           00217         movlw   0x40
+007D   00A4           00218         movwf   portc
+007E   0824           00219         movf    portc,W
+007F   0087           00220         movwf   PORTC
+0080   3003           00221         movlw   D'3'
+0081   00A5           00222         movwf   State  
+                      00223 ;       goto    SM_State2                               ;Go to next State               
+0082   28CD           00224         goto SM_Exit
+                      00225 
+                      00226 ;*************************************************************************
+                      00227 ;               End of State Machine State 1
+                      00228 ;*************************************************************************
+                      00229 ;*************************************************************************
+                      00230 ;               State Machine State 2
+                      00231 ;       output (0x20) to the ligth bar
+                      00232 ;*************************************************************************
+                      00233 
+0083                  00234 SM_State3
+0083   1283 1303      00235         BANKSEL PORTC
+0085   3020           00236         movlw   0x20
+0086   00A4           00237         movwf   portc
+0087   0824           00238         movf    portc,W
+0088   0087           00239         movwf   PORTC
+0089   3004           00240         movlw   D'4'
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+008A   00A5           00241         movwf   State
+                      00242 ;       goto    SM_State3                               ;Go to next State               
+008B   28CD           00243         goto SM_Exit
+                      00244 
+                      00245 ;*************************************************************************
+                      00246 ;               End of State Machine State 2
+                      00247 ;*************************************************************************
+                      00248 ;*************************************************************************
+                      00249 ;               State Machine State 3
+                      00250 ;   output a (0x10) to the ligth bar
+                      00251 ;*************************************************************************
+                      00252 
+008C                  00253 SM_State4
+008C   1283 1303      00254         BANKSEL PORTC
+008E   3010           00255         movlw   0x10
+008F   00A4           00256         movwf   portc
+0090   0824           00257         movf    portc,W
+0091   0087           00258         movwf   PORTC
+0092   3005           00259         movlw   D'5'
+0093   00A5           00260         movwf   State 
+                      00261 ;       goto    SM_State4                               ;Go to next State               
+0094   28CD           00262         goto SM_Exit
+                      00263 
+                      00264 ;*************************************************************************
+                      00265 ;               End of State Machine State 3
+                      00266 ;*************************************************************************      
+                      00267 ;*************************************************************************
+                      00268 ;               State Machine State 4
+                      00269 ;       output a (0x08) to the ligth bar
+                      00270 ;*************************************************************************
+                      00271 
+0095                  00272 SM_State5
+0095   1283 1303      00273         BANKSEL PORTC
+0097   3008           00274         movlw   0x08
+0098   00A4           00275         movwf   portc
+0099   0824           00276         movf    portc,W
+009A   0087           00277         movwf   PORTC
+009B   3006           00278         movlw   D'6'
+009C   00A5           00279         movwf   State
+                      00280 ;       goto    SM_State5                               ;Go to next State       
+009D   28CD           00281         goto SM_Exit
+                      00282 ;*************************************************************************
+                      00283 ;               End of State Machine State 4
+                      00284 ;*************************************************************************      
+                      00285 ;*************************************************************************
+                      00286 ;               State Machine State 5
+                      00287 ;        output a (0x04) to the ligth bar
+                      00288 ;*************************************************************************
+                      00289 
+009E                  00290 SM_State6
+009E   1283 1303      00291         BANKSEL PORTC
+00A0   3004           00292         movlw   0x04
+00A1   00A4           00293         movwf   portc
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00A2   0824           00294         movf    portc,W
+00A3   0087           00295         movwf   PORTC
+00A4   3007           00296         movlw   D'7'
+00A5   00A5           00297         movwf   State
+                      00298 ;       goto    SM_State6                                  ;Go to next State
+00A6   28CD           00299         goto SM_Exit
+                      00300 
+                      00301 ;*************************************************************************
+                      00302 ;               End of State Machine State 5
+                      00303 ;*************************************************************************      
+                      00304 ;*************************************************************************
+                      00305 ;               State Machine State 6
+                      00306 ;        output a (0x02) to the ligth bar
+                      00307 ;*************************************************************************
+                      00308 
+00A7                  00309 SM_State7
+00A7   1283 1303      00310         BANKSEL PORTC   
+00A9   3002           00311         movlw   0x02
+00AA   00A4           00312         movwf   portc
+00AB   0824           00313         movf    portc,W
+00AC   0087           00314         movwf   PORTC
+00AD   3008           00315         movlw   D'8'
+00AE   00A5           00316         movwf   State
+                      00317 ;       goto    SM_State7                               ;Exit State Machine     
+00AF   28CD           00318         goto SM_Exit
+                      00319 
+                      00320 ;*************************************************************************
+                      00321 ;               End of State Machine State 6
+                      00322 ;*************************************************************************      
+                      00323 
+                      00324 ;*************************************************************************
+                      00325 ;               State Machine State 8
+                      00326 ;        output a (0x01) to the ligth bar
+                      00327 ;*************************************************************************
+                      00328 
+00B0                  00329 SM_State8
+00B0   1283 1303      00330         BANKSEL PORTC
+00B2   3001           00331         movlw   0x01
+00B3   00A4           00332         movwf   portc
+00B4   0824           00333         movf    portc,W
+00B5   0087           00334         movwf   PORTC
+00B6   3009           00335         movlw   D'9'
+00B7   00A5           00336         movwf   State  
+                      00337 ;       goto    SM_State0                               ;Exit State Machine     
+00B8   28CD           00338         goto SM_Exit
+                      00339 
+                      00340 ;*************************************************************************
+                      00341 ;               End of State Machine State 8
+                      00342 ;*************************************************************************      
+                      00343 
+                      00344 ;*************************************************************************
+                      00345 ;               State Machine State 9
+                      00346 ;        output a (PORTB RB4) to the ligth bar
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00347 ;*************************************************************************
+                      00348 
+00B9                  00349 SM_State9
+00B9   1283 1303      00350         BANKSEL PORTB
+00BB   0187           00351         CLRF    PORTC
+00BC   3020           00352         movlw   0x20
+00BD   00A6           00353         movwf   portb
+00BE   0826           00354         movf    portb,W
+00BF   0086           00355         movwf   PORTB
+00C0   300A           00356         movlw   D'10' 
+00C1   00A5           00357         movwf   State
+00C2   28CD           00358         goto    SM_Exit
+                      00359 
+                      00360 ;*************************************************************************
+                      00361 ;               End of State Machine State 9
+                      00362 ;*************************************************************************      
+                      00363 
+                      00364 ;*************************************************************************
+                      00365 ;               State Machine State 10
+                      00366 ;        output a (PORTB RB4) to the ligth bar
+                      00367 ;*************************************************************************
+                      00368 
+00C3                  00369 SM_State10
+00C3   1283 1303      00370         BANKSEL PORTB
+00C5   0186           00371         CLRF    PORTB
+00C6   3010           00372         movlw   0x10
+00C7   00A6           00373         movwf   portb
+00C8   0826           00374         movf    portb,W
+00C9   0086           00375         movwf   PORTB
+00CA   3001           00376         movlw   D'1' 
+00CB   00A5           00377         movwf   State
+00CC   28CD           00378         goto    SM_Exit
+                      00379 
+                      00380 ;*************************************************************************
+                      00381 ;               End of State Machine State 10
+                      00382 ;*************************************************************************
+                      00383 
+00CD                  00384 SM_Exit ;               End Of State Machine 
+                      00385 
+Warning[203]: Found opcode in column 1. (goto)
+00CD   283F           00386 goto Main_Loop_Start
+                      00387 
+                      00388 
+2100                  00389         ORG     0x2100                          ; data EEPROM location
+2100   0001 0002 0003 00390         DE      1,2,3,4                         ; define first four EEPROM locations as 1, 2, 3, and 4
+       0004 
+                      00391 
+                      00392 
+                      00393         END     
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ABDEN                             00000000
+ABDOVF                            00000007
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000004
+ADCS1                             00000005
+ADCS2                             00000006
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+ANS0                              00000000
+ANS1                              00000001
+ANS10                             00000002
+ANS11                             00000003
+ANS2                              00000002
+ANS3                              00000003
+ANS4                              00000004
+ANS5                              00000005
+ANS6                              00000006
+ANS7                              00000007
+ANS8                              00000000
+ANS9                              00000001
+ANSEL                             0000011E
+ANSELH                            0000011F
+BAUDCTL                           0000009B
+BF                                00000000
+BRG0                              00000000
+BRG1                              00000001
+BRG10                             00000002
+BRG11                             00000003
+BRG12                             00000004
+BRG13                             00000005
+BRG14                             00000006
+BRG15                             00000007
+BRG16                             00000003
+BRG2                              00000002
+BRG3                              00000003
+BRG4                              00000004
+BRG5                              00000005
+BRG6                              00000006
+BRG7                              00000007
+BRG8                              00000000
+BRG9                              00000001
+BRGH                              00000002
+C                                 00000000
+C1CH0                             00000000
+C1CH1                             00000001
+C1IE                              00000005
+C1IF                              00000005
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+C1OE                              00000005
+C1ON                              00000007
+C1OUT                             00000006
+C1POL                             00000004
+C1R                               00000002
+C1SEN                             00000005
+C1VREN                            00000007
+C2CH0                             00000000
+C2CH1                             00000001
+C2IE                              00000006
+C2IF                              00000006
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2POL                             00000004
+C2R                               00000002
+C2REN                             00000004
+C2SYNC                            00000000
+C2VREN                            00000006
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCPR1H                            00000016
+CCPR1L                            00000015
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+CKE                               00000006
+CKP                               00000004
+CM1CON0                           00000119
+CM2CON0                           0000011A
+CM2CON1                           0000011B
+COUNT                             00000027
+CREN                              00000004
+CSRC                              00000007
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+D_A                               00000005
+D_NOT_A                           00000005
+ECCPAS                            0000001D
+ECCPAS0                           00000004
+ECCPAS1                           00000005
+ECCPAS2                           00000006
+ECCPASE                           00000007
+EEADR                             0000010D
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDAT                             0000010C
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GIE                               00000007
+GO                                00000001
+GO_DONE                           00000001
+GO_NOT_DONE                       00000001
+HTS                               00000002
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IOC                               00000096
+IOC0                              00000000
+IOC1                              00000001
+IOC2                              00000002
+IOC3                              00000003
+IOC4                              00000004
+IOC5                              00000005
+IOCA                              00000096
+IOCA0                             00000000
+IOCA1                             00000001
+IOCA2                             00000002
+IOCA3                             00000003
+IOCA4                             00000004
+IOCA5                             00000005
+IOCB                              00000116
+IOCB4                             00000004
+IOCB5                             00000005
+IOCB6                             00000006
+IOCB7                             00000007
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRP                               00000007
+LTS                               00000001
+MC1OUT                            00000007
+MC2OUT                            00000006
+MSK                               00000093
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 12
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+MSK0                              00000000
+MSK1                              00000001
+MSK2                              00000002
+MSK3                              00000003
+MSK4                              00000004
+MSK5                              00000005
+MSK6                              00000006
+MSK7                              00000007
+Main_Loop_Start                   0000003F
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RABPU                         00000007
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OERR                              00000001
+OPTION_REG                        00000081
+OSCCON                            0000008F
+OSCTUNE                           00000090
+OSFIE                             00000007
+OSFIF                             00000007
+OSTS                              00000003
+P                                 00000004
+P1M0                              00000006
+P1M1                              00000007
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PR2                               00000092
+PRSEN                             00000007
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PSA                               00000003
+PSSAC0                            00000002
+PSSAC1                            00000003
+PSSBD0                            00000000
+PSSBD1                            00000001
+PSTRCON                           0000019D
+PULSR                             00000002
+PULSS                             00000003
+PWM1CON                           0000001C
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RABIE                             00000003
+RABIF                             00000000
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SBOREN                            00000004
+SCKP                              00000004
+SCS                               00000000
+SENB                              00000003
+SENDB                             00000003
+SMP                               00000007
+SM_Exit                           000000CD
+SM_State1                         00000070
+SM_State10                        000000C3
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SM_State2                         0000007A
+SM_State3                         00000083
+SM_State4                         0000008C
+SM_State5                         00000095
+SM_State6                         0000009E
+SM_State7                         000000A7
+SM_State8                         000000B0
+SM_State9                         000000B9
+SM_Steering                       00000045
+SPBRG                             00000099
+SPBRGH                            0000009A
+SPEN                              00000007
+SR0                               00000006
+SR1                               00000007
+SRCON                             0000019E
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000093
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+STRA                              00000000
+STRB                              00000001
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+SWDTEN                            00000000
+SYNC                              00000004
+State                             00000025
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1GINV                            00000007
+T1GSS                             00000001
+T1IE                              00000000
+T1IF                              00000000
+T1OSCEN                           00000003
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T2IE                              00000001
+T2IF                              00000001
+TMR0                              00000001
+TMR1CS                            00000001
+TMR1GE                            00000006
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISB                             00000086
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRMT                              00000001
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 16
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ULPWUE                            00000005
+VCFG                              00000006
+VP6EN                             00000004
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             00000118
+VRR                               00000005
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000097
+WDTPS0                            00000001
+WDTPS1                            00000002
+WDTPS2                            00000003
+WDTPS3                            00000004
+WPU                               00000095
+WPU0                              00000000
+WPU1                              00000001
+WPU2                              00000002
+WPU4                              00000004
+WPU5                              00000005
+WPUA                              00000095
+WPUA0                             00000000
+WPUA1                             00000001
+WPUA2                             00000002
+WPUA4                             00000004
+WPUA5                             00000005
+WPUB                              00000115
+WPUB4                             00000004
+WPUB5                             00000005
+WPUB6                             00000006
+WPUB7                             00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WUE                               00000001
+Z                                 00000002
+_BOD_NSLEEP                       00003EFF
+_BOD_OFF                          00003CFF
+_BOD_ON                           00003FFF
+_BOD_SBODEN                       00003DFF
+_BOR_NSLEEP                       00003EFF
+_BOR_OFF                          00003CFF
+_BOR_ON                           00003FFF
+_BOR_SBODEN                       00003DFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003F7F
+_CP_OFF                           00003FFF
+_CP_ON                            00003FBF
+_DEVID1                           00002006
+_EC_OSC                           00003FFB
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_EXTRC                            00003FFF
+_EXTRCIO                          00003FFE
+_EXTRC_OSC_CLKOUT                 00003FFF
+_EXTRC_OSC_NOCLKOUT               00003FFE
+_FCMEN_OFF                        000037FF
+_FCMEN_ON                         00003FFF
+_HS_OSC                           00003FFA
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_IESO_OFF                         00003BFF
+_IESO_ON                          00003FFF
+_INTOSC                           00003FFD
+_INTOSCIO                         00003FFC
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FF8
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FEF
+_WDT_OFF                          00003FF7
+_WDT_ON                           00003FFF
+_XT_OSC                           00003FF9
+__16F690                          00000001
+main                              00000018
+pclath_temp                       0000007F
+portb                             00000026
+portc                             00000024
+setinal                           00000023
+status_temp                       0000007E
+w_temp                            0000007D
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+00C0 : XXXXXXXXXXXXXX-- ---------------- ---------------- ----------------
+2000 : -------X-------- ---------------- ---------------- ----------------
+2100 : XXXX------------ ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   203
+Program Memory Words Free:  3893
+
+
+MPASM  5.42              STATEMACHINEAUTO.ASM   5-3-2018  18:17:15         PAGE 18
+
+
+
+
+
+Errors   :     0
+Warnings :     8 reported,     0 suppressed
+Messages :     6 reported,     0 suppressed
+
+
